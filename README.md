@@ -29,3 +29,5 @@ A remote-control for the TORCS scr 2013 server patch.
  
 ## Credits
 This GUI was developed by Till Zoppke in the context of the lecture "ProInformatik III -- Objektorientierte Programmierung" 2015 at Freie Universität Berlin. Thank's to Bernhard Wymann for the hint, how to replace the driver names in TORCS!
+
+This repository contains (modified) files that are part of TORCS, and the (modified) SCR Java Client.
