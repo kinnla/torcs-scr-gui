@@ -28,7 +28,7 @@ A remote-control for the TORCS scr 2013 server patch.
 * The 2013 SCR Server Patch http://sourceforge.net/projects/cig/files/SCR%20Championship/
  
 Screenshot of the TORCS GUI: 
-![alt text](https://github.com/kinnla/torcs-scr-gui/raw/master/src/torcs-gui.PNG "Screenshot of the TORCS GUI")
+![alt text](https://raw.githubusercontent.com/kinnla/torcs-scr-gui/master/torcs-gui.PNG "Screenshot of the TORCS GUI")
 
 
 ## Credits
