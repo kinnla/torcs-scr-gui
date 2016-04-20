@@ -21,7 +21,8 @@ import torcs.scr.Client;
 public class Main {
 
 	// path to torcs
-	static final String TORCS_FOLDER = "Z:\\torcs";
+	static String TORCS_FOLDER = "Z:\\torcs";
+	static String DRIVERS_FOLDER = "./src/torcs/";
 
 	private Writer writer;
 	private BufferedReader reader;
@@ -141,10 +142,19 @@ public class Main {
 	}
 
 	private void readDrivers() throws IOException {
-		File torcsDir = new File("./src/torcs/");
-		String[] packages = torcsDir.list();
+				File driversFolder = new File(DRIVERS_FOLDER);
+		
+		// check if drivers directory exists
+		String[] packages = driversFolder.list();
+		if (packages == null) {
+			System.err
+			.println("Error: Driver Directory does not exist: " + DRIVERS_FOLDER);
+			System.exit(1);
+		}
+		
+		// iterate on packages and init drivers
 		for (String p : packages) {
-			File f = new File(torcsDir + "/" + p);
+			File f = new File(driversFolder + "/" + p);
 			if (!p.equals("scr") && f.isDirectory()) {
 				String[] classes = f.list();
 				for (String cls : classes) {
@@ -340,6 +350,17 @@ public class Main {
 	}
 
 	public static void main(String[] args) throws IOException {
+		
+		// read parameters if any
+		for (String arg : args) {
+			if (arg.startsWith("TORCS_FOLDER")) {
+				TORCS_FOLDER = arg.substring(arg.indexOf('=') + 1);
+			} else if (arg.startsWith("DRIVERS_FOLDER")) {
+				DRIVERS_FOLDER = arg.substring(arg.indexOf('=') + 1);
+			} 				
+		}
+		
+		// init
 		getInstance().initCMD();
 		getInstance().killOldProcesses();
 		getInstance().readDrivers();
