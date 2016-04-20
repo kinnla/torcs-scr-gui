@@ -5,7 +5,12 @@ import java.util.List;
 
 import torcs.scr.Client;
 
-public class TorcsConfig {
+/**
+ * Data class for a torcs race configuration
+ * @author zoppke
+ *
+ */
+public class RaceConfig {
 
 	// track name
 	private String trackName = "wheel-1";

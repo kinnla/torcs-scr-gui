@@ -31,9 +31,9 @@ public class TorcsPanel extends JPanel {
 	int origX;
 	int origY;
 
-	TorcsConfig torcsConfig;
+	RaceConfig torcsConfig;
 
-	public TorcsPanel(TorcsConfig config) {
+	public TorcsPanel(RaceConfig config) {
 		super(null);
 		this.torcsConfig = config;
 	}

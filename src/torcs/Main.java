@@ -26,7 +26,7 @@ public class Main {
 
 	private Writer writer;
 	private BufferedReader reader;
-	private TorcsConfig torcsConfig = new TorcsConfig();
+	private RaceConfig raceConfig = new RaceConfig();
 
 	// singleton
 	private static Main main = null;
@@ -56,7 +56,7 @@ public class Main {
 	public void performAction() {
 
 		// remove unselected drivers
-		Iterator<Driver> iter = torcsConfig.getDrivers().iterator();
+		Iterator<Driver> iter = raceConfig.getDrivers().iterator();
 		while (iter.hasNext()) {
 			Driver driver = iter.next();
 			if (driver.getLabel().getX() < 200) {
@@ -65,50 +65,50 @@ public class Main {
 		}
 
 		// check, if any driver selected
-		if (torcsConfig.getDrivers().isEmpty()) {
+		if (raceConfig.getDrivers().isEmpty()) {
 			System.err.println("No Driver selected. System exit.");
 			System.exit(0);
 		}
 
 		// check, if too many drivers are selected
-		while (torcsConfig.getDrivers().size() > 10) {
+		while (raceConfig.getDrivers().size() > 10) {
 			System.err.println("Warning: too many drivers selected. Skipping "
-					+ torcsConfig.getDrivers().remove(10).getName() + ".");
+					+ raceConfig.getDrivers().remove(10).getName() + ".");
 		}
 
 		// sort drivers
 		boolean swapped = true;
 		while (swapped == true) {
 			swapped = false;
-			for (int i = 1; i < torcsConfig.getDrivers().size(); ++i) {
-				if (torcsConfig.getDrivers().get(i).getLabel().getY() < torcsConfig
+			for (int i = 1; i < raceConfig.getDrivers().size(); ++i) {
+				if (raceConfig.getDrivers().get(i).getLabel().getY() < raceConfig
 						.getDrivers().get(i - 1).getLabel().getY()) {
-					Collections.swap(torcsConfig.getDrivers(), i, i - 1);
+					Collections.swap(raceConfig.getDrivers(), i, i - 1);
 					swapped = true;
 				}
 			}
 		}
 
 		// check, if we are starting a test run
-		if (torcsConfig.getStage() == Client.Stage.TEST) {
+		if (raceConfig.getStage() == Client.Stage.TEST) {
 
 			// Test run. Make sure that we have only 1 driver selected
-			while (torcsConfig.getDrivers().size() > 1) {
+			while (raceConfig.getDrivers().size() > 1) {
 				System.err.println("Warning: too many drivers selected for test run. Skipping "
-						+ torcsConfig.getDrivers().remove(1).getName() + ".");
+						+ raceConfig.getDrivers().remove(1).getName() + ".");
 			}
 			
 			// Add simple driver at the start
-			torcsConfig.getDrivers().add(0, new Driver("torcs.simple.SimpleDriver"));
+			raceConfig.getDrivers().add(0, new Driver("torcs.simple.SimpleDriver"));
 			
 			// add another 7 drivers in the middle 
-			Driver d = torcsConfig.getDriver(1);
+			Driver d = raceConfig.getDriver(1);
 			for (int i=0; i<7;++i){
-				torcsConfig.addDriver(d);
+				raceConfig.addDriver(d);
 			}
 			
 			// add dahlem boys at the end
-			torcsConfig.addDriver(new Driver("torcs.misto.MistoDriver"));			
+			raceConfig.addDriver(new Driver("torcs.misto.MistoDriver"));			
 		}
 
 		
@@ -126,8 +126,8 @@ public class Main {
 
 			// read from the command shell
 			String line;
-			Driver lastDriver = torcsConfig.getDrivers().get(
-					torcsConfig.getDrivers().size() - 1);
+			Driver lastDriver = raceConfig.getDrivers().get(
+					raceConfig.getDrivers().size() - 1);
 			while ((line = reader.readLine()) != null) {
 				System.out.println(line);
 
@@ -148,7 +148,7 @@ public class Main {
 		String[] packages = driversFolder.list();
 		if (packages == null) {
 			System.err
-			.println("Error: Driver Directory does not exist: " + DRIVERS_FOLDER);
+			.println("Error: Drivers Folder does not exist: " + DRIVERS_FOLDER);
 			System.exit(1);
 		}
 		
@@ -161,7 +161,7 @@ public class Main {
 					if (cls.contains("Driver.java")) {
 						String driver = "torcs." + p + "."
 								+ cls.substring(0, cls.lastIndexOf('.'));
-						torcsConfig.addDriver(new Driver(driver));
+						raceConfig.addDriver(new Driver(driver));
 						System.out.println("Finding driver: " + driver);
 					}
 				}
@@ -172,10 +172,10 @@ public class Main {
 	private void replaceTextures() {
 
 		// iterate on the drivers
-		for (int i = 0; i < torcsConfig.getNumerOfDrivers(); ++i) {
+		for (int i = 0; i < raceConfig.getNumerOfDrivers(); ++i) {
 
 			// check, if source file exists
-			File source = new File(torcsConfig.getDriver(i).getTextureFile());
+			File source = new File(raceConfig.getDriver(i).getTextureFile());
 			if (!source.exists()) {
 				System.err
 						.println("Warning: Texture File not found: " + source);
@@ -221,8 +221,8 @@ public class Main {
 			int lineCounter = 0;
 			while ((line = br.readLine()) != null) {
 				if (lineCounter % 11 == 6 && lineCounter > 11
-						&& lineCounter / 11 <= torcsConfig.getNumerOfDrivers()) {
-					String s = torcsConfig.getDriver(lineCounter / 11 - 1)
+						&& lineCounter / 11 <= raceConfig.getNumerOfDrivers()) {
+					String s = raceConfig.getDriver(lineCounter / 11 - 1)
 							.getName();
 					bw.write("      <attstr name=\"name\" val=\"" + s
 							+ "\"></attstr>\n");
@@ -269,14 +269,14 @@ public class Main {
 			while ((line = br.readLine()) != null) {
 				if (lineCounter == 15) {
 					bw.write("      <attstr name=\"name\" val=\""
-							+ torcsConfig.getTrackName() + "\"/>\n");
+							+ raceConfig.getTrackName() + "\"/>\n");
 					bw.write("      <attstr name=\"category\" val=\""
-							+ torcsConfig.getTrackCategory() + "\"/>\n");
+							+ raceConfig.getTrackCategory() + "\"/>\n");
 				} else if (lineCounter == 31) {
 					bw.write("    <attnum name=\"laps\" val=\""
-							+ torcsConfig.getNumberOfLaps() + "\"/>\n");
+							+ raceConfig.getNumberOfLaps() + "\"/>\n");
 				} else if (lineCounter == 46) {
-					for (int i = 0; i < torcsConfig.getNumerOfDrivers(); ++i) {
+					for (int i = 0; i < raceConfig.getNumerOfDrivers(); ++i) {
 						bw.write("      <section name=\"" + (i + 1) + "\">\n");
 						bw.write("        <attnum name=\"idx\" val=\"" + i
 								+ "\"/>\n");
@@ -317,7 +317,7 @@ public class Main {
 
 		writer.write("cd " + path + "\n");
 		writer.write("start \"torcs\" \"wtorcs.exe\" -nofuel");
-		if (!torcsConfig.isDamage()) {
+		if (!raceConfig.isDamage()) {
 			writer.write(" -nodamage");
 		}
 		writer.write("\n");
@@ -331,7 +331,7 @@ public class Main {
 		int id = 1;
 
 		// iterate on the drivers
-		for (Driver driver : torcsConfig.getDrivers()) {
+		for (Driver driver : raceConfig.getDrivers()) {
 			// start each driver in its own process
 			writer.write("start /MIN \"" + driver + "\" \"java\" ");
 			writer.write("-cp \"" + System.getProperty("java.class.path")
@@ -339,10 +339,10 @@ public class Main {
 			writer.write("torcs.scr.Client ");
 			writer.write(driver + " host:127.0.0.1 port:" + (port++)
 					+ " id:SCR" + (id++) + " damage:"
-					+ (torcsConfig.isDamage() ? "on" : "off") + " verbose:"
-					+ (torcsConfig.isVerbose() ? "on" : "off") + " track:"
-					+ torcsConfig.getTrackName() + " stage:"
-					+ torcsConfig.getStage());
+					+ (raceConfig.isDamage() ? "on" : "off") + " verbose:"
+					+ (raceConfig.isVerbose() ? "on" : "off") + " track:"
+					+ raceConfig.getTrackName() + " stage:"
+					+ raceConfig.getStage());
 			writer.write("\n");
 			writer.flush();
 			System.out.println("starting driver " + driver);
@@ -365,16 +365,23 @@ public class Main {
 		getInstance().killOldProcesses();
 		getInstance().readDrivers();
 
+		System.out.println("2");
+		
+		
 		// create panel
-		TorcsPanel panel = new TorcsPanel(getInstance().torcsConfig);
+		TorcsPanel panel = new TorcsPanel(getInstance().raceConfig);
 		panel.init();
 
+		System.out.println("3");
+		
 		// create frame
 		JFrame frame = panel.createFrame();
 		frame.setDefaultCloseOperation(WindowConstants.EXIT_ON_CLOSE);
 		frame.pack();
 		frame.setLocation(100, 100);
 		frame.setVisible(true);
+		
+		System.out.println("4");
 	}
 
 }
