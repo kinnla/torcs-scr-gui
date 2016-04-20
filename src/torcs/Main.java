@@ -365,23 +365,16 @@ public class Main {
 		getInstance().killOldProcesses();
 		getInstance().readDrivers();
 
-		System.out.println("2");
-		
-		
 		// create panel
 		TorcsPanel panel = new TorcsPanel(getInstance().raceConfig);
 		panel.init();
 
-		System.out.println("3");
-		
 		// create frame
 		JFrame frame = panel.createFrame();
 		frame.setDefaultCloseOperation(WindowConstants.EXIT_ON_CLOSE);
 		frame.pack();
 		frame.setLocation(100, 100);
 		frame.setVisible(true);
-		
-		System.out.println("4");
 	}
 
 }
