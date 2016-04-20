@@ -22,7 +22,7 @@ public class Main {
 
 	// path to torcs
 	static String TORCS_FOLDER = "Z:\\torcs";
-	static String DRIVERS_FOLDER = "./src/torcs/";
+	static String DRIVERS_FOLDER = "./bin/torcs/";
 
 	private Writer writer;
 	private BufferedReader reader;
@@ -158,7 +158,7 @@ public class Main {
 			if (!p.equals("scr") && f.isDirectory()) {
 				String[] classes = f.list();
 				for (String cls : classes) {
-					if (cls.contains("Driver.java")) {
+					if (cls.contains("Driver.class")) {
 						String driver = "torcs." + p + "."
 								+ cls.substring(0, cls.lastIndexOf('.'));
 						raceConfig.addDriver(new Driver(driver));
