@@ -3,25 +3,3 @@
 # Mit dieser Geschwindigkeit kommen wir sicher um jede Kurve.
 # Das Auto wird nicht weiter abbremsen als bis zu dieser Geschwindigkeit
 SAFE_SPEED = 50
-
-
-
-PANIC_TICKS
-
-
-
-OFF_TRACK_ACCELERATION
-
-
-
-MAX_SPEED
-
-
-
-DETECT_STUCK_TICKS
-
-
-
-UNSTACK_BACK_ON_TRACK_TICKS
-
-

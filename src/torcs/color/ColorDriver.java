@@ -16,10 +16,15 @@ import torcs.scr.SensorModel;
  */
 public abstract class ColorDriver extends Driver {
 
-	// --------------------- constants ------------------------------------
+	// --------------------- parameters ------------------------------------
 
 	// safe speed
-	static double SAFE_SPEED; 
+	static double SAFE_SPEED;
+
+	// max speed
+	static double MAX_SPEED;
+
+	// --------------------- constants ------------------------------------
 
 	static private enum Status {
 		START, DRIVE, STUCKLEFT, STUCKRIGHT, PANIC
@@ -48,7 +53,7 @@ public abstract class ColorDriver extends Driver {
 	private long tickCounter = 0;
 
 	// action to be returned
-	private Action action;
+	private Action action = new Action();
 
 	// forward distance
 	private double forwardDist = 200;
@@ -62,7 +67,7 @@ public abstract class ColorDriver extends Driver {
 	// panic counter
 	private double distanceRacedMem = 0;
 
-	// last PID error
+	// wanted angle
 	private double wantedAngle = 0;
 
 	// wanted speed
@@ -71,14 +76,14 @@ public abstract class ColorDriver extends Driver {
 	// panic action
 	private Action panicAction = null;
 
-	/* -------------------- parameters stuff ---------------*/
-	
-	public abstract String getParametersPath();
-	
-	private DriverParameters parameters = new DriverParameters(getParametersPath());
+	/* -------------------- parameters stuff --------------- */
 
-	
-	/* ----------------------- Action ----------------------- */
+	public abstract String getParametersPath();
+
+	private DriverParameters parameters = new DriverParameters(
+			getParametersPath());
+
+	/* ----------------------- main control loop ----------------------- */
 
 	public Action control(SensorModel sensors) {
 
@@ -90,9 +95,6 @@ public abstract class ColorDriver extends Driver {
 		speed = sensors.getSpeed();
 		trackPosition = sensors.getTrackPosition();
 		distanceRaced = sensors.getDistanceRaced();
-
-		// create new action object to send our commands to the server
-		action = new Action();
 
 		/* ----------------------- detect Status ----------------------- */
 
@@ -182,28 +184,8 @@ public abstract class ColorDriver extends Driver {
 
 		case DRIVE:
 
-			/* ----------------------- control velocity ----------------------- */
-
-			// evaluate trackedgesensors to determine wanted speed
-			if (forwardDist > 199) {
-				wantedSpeed = 300;
-			} else {
-				wantedSpeed = Math.max(SAFE_SPEED, Math.sqrt(forwardDist) * 22
-						- Math.abs(direction) * 20);
-			}
-
-			// check if we shall accelerate or brake
-			if (wantedSpeed >= speed) {
-				action.accelerate = 1;
-				action.brake = 0;
-			} else {
-				action.accelerate = 0;
-				action.brake = 1;
-			}
-
-			action.gear = getGear();
-
-			// control steering
+			computeWantedSpeed();
+			controlGear();
 			controlSteering();
 
 			break;
@@ -239,7 +221,7 @@ public abstract class ColorDriver extends Driver {
 		/* ----------------------- clean up --------------------- */
 
 		// cap Acceleration
-		capAccAndBrake();
+		controlBrakeAndAcceleration();
 
 		// adjust tick counter
 		tickCounter++;
@@ -307,36 +289,56 @@ public abstract class ColorDriver extends Driver {
 		return 0;
 	}
 
-	private int getGear() {
+	/**
+	 * Computes the wanted speed (for state DRIVE only)
+	 * 
+	 */
+	private void computeWantedSpeed() {
+		// evaluate trackedgesensors to determine wanted speed
+		if (forwardDist > 199) {
+			wantedSpeed = MAX_SPEED;
+		} else {
+			wantedSpeed = Math.max(SAFE_SPEED, Math.sqrt(forwardDist) * 22
+					- Math.abs(direction) * 20);
+			wantedSpeed = Math.min(MAX_SPEED, wantedSpeed);
+		}
+	}
+
+	/**
+	 * Sets the next gear based on rpm and current gear
+	 */
+	private void controlGear() {
 
 		// if gear is 0 (N) or -1 (R) just return 1
 		if (gear < 1) {
 			System.out.println("gear 1, rmp: " + rpm);
-			return 1;
+			action.gear = 1;
 		}
 
 		// check if the RPM value of car is greater than the one suggested
 		// to shift up the gear from the current one
 		else if (gear < 6 && rpm >= gearUp[gear - 1]) {
 			System.out.println("gearup: " + (gear + 1) + ", rmp: " + rpm);
-			return gear + 1;
+			action.gear = gear + 1;
 		}
 
 		// check if the RPM value of car is lower than the one suggested
 		// to shift down the gear from the current one
 		else if (gear > 1 && rpm <= gearDown[gear - 1]) {
 			System.out.println("geardown: " + (gear - 1) + ", rmp: " + rpm);
-			return gear - 1;
+			action.gear = gear - 1;
 		}
 
 		// otherwhise keep current gear
-		return gear;
+		action.gear = gear;
 	}
 
-	// cap the acceleration based on steering & ground
-	private void capAccAndBrake() {
+	/**
+	 * control the brake and acceleration based on -
+	 */
+	private void controlBrakeAndAcceleration() {
 
-		// PANIC: don't cap
+		// PANIC: don't control anything
 		if (currentState == Status.PANIC) {
 			return;
 		}
@@ -348,10 +350,41 @@ public abstract class ColorDriver extends Driver {
 			return;
 		}
 
+		if (action.gear == -1) {
+
+			// we want to go backwards
+			action.accelerate = 1;
+			action.brake = 0;
+		} else {
+
+			// calculate speed and brake
+			if (wantedSpeed > speed + 5) {
+
+				// full speed
+				action.accelerate = 1;
+				action.brake = 0;
+			} else if (wantedSpeed < speed - 5) {
+
+				// full brake
+				action.accelerate = 0;
+				action.brake = 1;
+			} else if (wantedSpeed > speed + 2) {
+
+				// limited acceleration (linear ramp)
+				action.accelerate = (wantedSpeed - speed) / 3;
+				action.brake = 0;
+			} else if (wantedSpeed < speed - 2) {
+
+				// limited brake (linear ramp)
+				action.accelerate = 0;
+				action.brake = (speed - wantedSpeed) / 3;
+			}
+		}
+
 		// outside track: cap by 50%
 		if (Math.abs(trackPosition) > 1) {
-			action.accelerate *= 0.5;
-			action.brake *= 0.5;
+			action.accelerate = Math.min(0.5, action.accelerate);
+			action.brake = Math.min(0.5, action.brake);
 		}
 
 		// small steering angle: don't cap further
@@ -378,16 +411,18 @@ public abstract class ColorDriver extends Driver {
 	public void shutdown() {
 		System.out.println("Bye bye!");
 	}
-	
+
+	// ----------------------- parameters class ------------------------
+
 	static class DriverParameters extends Properties implements Runnable {
-		
+
 		private String parametersPath;
-		
+
 		DriverParameters(String parametersPath) {
 			this.parametersPath = parametersPath;
 			load();
 		}
-		
+
 		private void load() {
 			try {
 				FileInputStream in = new FileInputStream(parametersPath);
@@ -395,17 +430,14 @@ public abstract class ColorDriver extends Driver {
 			} catch (IOException e) {
 				System.out.println("Can not load parameters file");
 			}
-			
+
 			SAFE_SPEED = Double.parseDouble(getProperty("SAFE_SPEED"));
 		}
-		
+
 		@Override
 		public void run() {
-			
-			
+
 		}
-		
-		
-		
+
 	}
 }
