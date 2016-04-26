@@ -3,6 +3,9 @@
  */
 package torcs.scr;
 
+import java.io.FileNotFoundException;
+import java.io.FileOutputStream;
+import java.io.PrintStream;
 import java.util.StringTokenizer;
 
 /**
@@ -43,7 +46,17 @@ public class Client {
 	 */
 	public static void main(String[] args) {
 
+		// read parameters from input stream
 		parseParameters(args);
+
+		// set log file
+		try {
+			System.setOut(new PrintStream(new FileOutputStream(clientId + "_log.txt",true)));
+		} catch (FileNotFoundException e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+		}
+		
 		SocketHandler mySocket = new SocketHandler(host, port, verbose);
 		String inMsg;
 

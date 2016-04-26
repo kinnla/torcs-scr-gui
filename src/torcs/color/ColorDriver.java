@@ -393,7 +393,7 @@ public abstract class ColorDriver extends Driver {
 				FileInputStream in = new FileInputStream(parametersPath);
 				load(in);
 			} catch (IOException e) {
-				e.printStackTrace();
+				System.out.println("Can not load parameters file");
 			}
 			
 			SAFE_SPEED = Double.parseDouble(getProperty("SAFE_SPEED"));

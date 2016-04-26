@@ -3,10 +3,12 @@ package torcs;
 import java.io.BufferedReader;
 import java.io.BufferedWriter;
 import java.io.File;
+import java.io.FileOutputStream;
 import java.io.FileWriter;
 import java.io.IOException;
 import java.io.InputStreamReader;
 import java.io.OutputStreamWriter;
+import java.io.PrintStream;
 import java.io.Writer;
 import java.nio.file.Files;
 import java.nio.file.StandardCopyOption;
@@ -21,7 +23,7 @@ import torcs.scr.Client;
 public class Main {
 
 	// path to torcs
-	static String TORCS_FOLDER = "Z:\\torcs";
+	static String TORCS_FOLDER = "./torcs-exe";
 	static String DRIVERS_FOLDER = "./bin/torcs/";
 
 	private Writer writer;
@@ -121,8 +123,9 @@ public class Main {
 			replaceTextures();
 
 			// start executables
-			startTorcs();
+			// drivers first, as we don't change the working dir
 			startDrivers();
+			startTorcs();
 
 			// read from the command shell
 			String line;
@@ -351,7 +354,7 @@ public class Main {
 
 	public static void main(String[] args) throws IOException {
 		
-		// read parameters if any
+		// read parameters from input stream if any
 		for (String arg : args) {
 			if (arg.startsWith("TORCS_FOLDER")) {
 				TORCS_FOLDER = arg.substring(arg.indexOf('=') + 1);
@@ -359,6 +362,9 @@ public class Main {
 				DRIVERS_FOLDER = arg.substring(arg.indexOf('=') + 1);
 			} 				
 		}
+		
+		// set log file
+		System.setOut(new PrintStream(new FileOutputStream("log_main.txt",true)));
 		
 		// init
 		getInstance().initCMD();
