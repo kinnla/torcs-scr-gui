@@ -35,19 +35,19 @@ public class RaceConfig {
 	private int numberOfLaps = 1;
 
 	// drivers
-	private List<Driver> drivers = new ArrayList<>();
+	private List<DriverClass> drivers = new ArrayList<>();
 
 	// -------------------- drivers -------------------------
 
-	public List<Driver> getDrivers() {
+	public List<DriverClass> getDrivers() {
 		return drivers;
 	}
 
-	public void setDrivers(List<Driver> drivers) {
+	public void setDrivers(List<DriverClass> drivers) {
 		this.drivers = drivers;
 	}
 
-	public void addDriver(Driver d) {
+	public void addDriver(DriverClass d) {
 		drivers.add(d);
 	}
 
@@ -55,7 +55,7 @@ public class RaceConfig {
 		return drivers.size();
 	}
 
-	public Driver getDriver(int index) {
+	public DriverClass getDriver(int index) {
 		return drivers.get(index);
 	}
 

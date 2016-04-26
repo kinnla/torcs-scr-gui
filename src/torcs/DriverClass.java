@@ -2,12 +2,12 @@ package torcs;
 
 import javax.swing.JLabel;
 
-class Driver {
+class DriverClass {
 
 	private String className;
 	private JLabel label = null;
 
-	Driver(String className) {
+	DriverClass(String className) {
 		this.className = className;
 	}
 

@@ -1,0 +1,5 @@
+# Parameter für das blaue Rennauto
+
+# Mit dieser Geschwindigkeit kommen wir sicher um jede Kurve.
+# Das Auto wird nicht weiter abbremsen als bis zu dieser Geschwindigkeit
+SAFE_SPEED = 50

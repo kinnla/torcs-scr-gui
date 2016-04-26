@@ -56,9 +56,9 @@ public class Main {
 	public void performAction() {
 
 		// remove unselected drivers
-		Iterator<Driver> iter = raceConfig.getDrivers().iterator();
+		Iterator<DriverClass> iter = raceConfig.getDrivers().iterator();
 		while (iter.hasNext()) {
-			Driver driver = iter.next();
+			DriverClass driver = iter.next();
 			if (driver.getLabel().getX() < 200) {
 				iter.remove();
 			}
@@ -99,16 +99,16 @@ public class Main {
 			}
 			
 			// Add simple driver at the start
-			raceConfig.getDrivers().add(0, new Driver("torcs.simple.SimpleDriver"));
+			raceConfig.getDrivers().add(0, new DriverClass("torcs.simple.SimpleDriver"));
 			
 			// add another 7 drivers in the middle 
-			Driver d = raceConfig.getDriver(1);
+			DriverClass d = raceConfig.getDriver(1);
 			for (int i=0; i<7;++i){
 				raceConfig.addDriver(d);
 			}
 			
 			// add dahlem boys at the end
-			raceConfig.addDriver(new Driver("torcs.misto.MistoDriver"));			
+			raceConfig.addDriver(new DriverClass("torcs.misto.MistoDriver"));			
 		}
 
 		
@@ -126,7 +126,7 @@ public class Main {
 
 			// read from the command shell
 			String line;
-			Driver lastDriver = raceConfig.getDrivers().get(
+			DriverClass lastDriver = raceConfig.getDrivers().get(
 					raceConfig.getDrivers().size() - 1);
 			while ((line = reader.readLine()) != null) {
 				System.out.println(line);
@@ -161,7 +161,7 @@ public class Main {
 					if (cls.contains("Driver.class")) {
 						String driver = "torcs." + p + "."
 								+ cls.substring(0, cls.lastIndexOf('.'));
-						raceConfig.addDriver(new Driver(driver));
+						raceConfig.addDriver(new DriverClass(driver));
 						System.out.println("Finding driver: " + driver);
 					}
 				}
@@ -331,7 +331,7 @@ public class Main {
 		int id = 1;
 
 		// iterate on the drivers
-		for (Driver driver : raceConfig.getDrivers()) {
+		for (DriverClass driver : raceConfig.getDrivers()) {
 			// start each driver in its own process
 			writer.write("start /MIN \"" + driver + "\" \"java\" ");
 			writer.write("-cp \"" + System.getProperty("java.class.path")
