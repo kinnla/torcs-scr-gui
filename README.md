@@ -27,6 +27,10 @@ A remote-control for the TORCS scr 2013 server patch.
 * TORCS V 1.3.4 http://torcs.sourceforge.net/
 * The 2013 SCR Server Patch http://sourceforge.net/projects/cig/files/SCR%20Championship/
  
+Screenshot of the TORCS GUI: 
+![alt text](https://raw.githubusercontent.com/kinnla/torcs-scr-gui/master/torcs-gui.PNG "Screenshot of the TORCS GUI")
+
+
 ## Credits
 This GUI was developed in the context of the lecture "ProInformatik III -- Objektorientierte Programmierung" 2015 at Freie Universität Berlin. http://www.fu-berlin.de/vv/de/lv/216597
 Thanks to Bernhard Wymann for the hint, how to replace the driver names in TORCS!

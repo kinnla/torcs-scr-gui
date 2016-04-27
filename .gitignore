@@ -10,4 +10,14 @@
 
 # virtual machine crash logs, see http://www.java.com/en/download/help/error_hotspot.xml
 hs_err_pid*
+
+# binary files
 /bin/
+
+# eclipse project stuff
+.classpath
+.project
+
+# log files
+log_main.txt
+*_log.txt

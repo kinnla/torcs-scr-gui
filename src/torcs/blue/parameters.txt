@@ -1,0 +1,53 @@
+# Parameter für das blaue Rennauto
+
+# Mindestgeschwindigkeit, mit der das Auto durch jede Kurve kommen soll
+# Das Auto wird nicht weiter abbremsen als bis zu dieser Geschwindigkeit
+#Double
+SAFE_SPEED = 50 
+
+# Maximale Geschwindigkeit, auf die das Auto auf gerader Strecke beschleunigt
+#Double
+MAX_SPEED = 300 
+
+# Anzahl ticks, nach denen erneut überprüft wird, ob das Auto in Panik verfällt.
+# Panik bedeutet, dass das Auto seine Intelligenz ausschaltet.
+# Es fährt dann zufällig vorwärts oder rückwärts und dreht auch das Lenkrad zufällig.
+#Integer
+PANIC_TICKS = 250
+
+# Distanz in Metern für das Auslösen den Panik
+# Wenn das Auto seit der letzten Panik-Überprüfung weniger als diese Distanz
+# zurück gelegt hat, dann stimmt irgendetwas mit der Programmierung nicht
+# und das Auto verfällt in Panik.
+#Double
+PANIC_DISTANCE = 2.0
+
+# Winkel des Autos zur Richtung der Fahrbahn, ab dem das Auto denkt,
+# es wäre stecken geblieben. Das Auto kann schleudern 
+# oder von einem anderen Auto von der Strecke gedrängt werden
+# und dann mit dem Gesicht zur Leitplanke stehen bleiben.
+# In diesem Fall muss es in den Rückwärtsgang schalten und wenden.
+#Double
+STUCK_ANGLE = 40
+
+# Winkel des Autos zur Richtung der Fahrbahn, ab dem das Auto nicht mehr denkt,
+# es wäre stecken geblieben. Es fährt dann vorwärts weiter und versucht,
+# zurück zur Strecke zu kommen, falls es neben der Fahrbahn ist. 
+#Double
+UNSTUCK_ANGLE = 30
+
+
+OFF_TRACK_ACCELERATION
+
+
+
+
+
+
+DETECT_STUCK_TICKS
+
+
+
+UNSTACK_BACK_ON_TRACK_TICKS
+
+

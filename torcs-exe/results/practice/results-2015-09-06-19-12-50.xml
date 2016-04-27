@@ -1,0 +1,58 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE params SYSTEM "Z:/torcs/config/params.dtd">
+<?xml-stylesheet type="text/xsl" href="file:///Z:/torcs/config/style.xsl"?>
+
+<params name="Results">
+  <section name="Header">
+    <attnum name="date" val="1.44156e+009"/>
+  </section>
+
+  <section name="Current">
+    <attnum name="current track" val="1"/>
+    <attnum name="current race" val="1"/>
+    <attnum name="current driver" val="1"/>
+  </section>
+
+  <section name="CG Speedway number 1">
+    <section name="Drivers">
+      <section name="1">
+        <attstr name="dll name" val="scr_server"/>
+        <attnum name="index" val="0"/>
+      </section>
+
+    </section>
+
+    <section name="Results">
+      <section name="Practice">
+        <attstr name="driver name" val="scr_server 1"/>
+        <section name="1">
+          <attnum name="time" val="157.26"/>
+          <attnum name="best lap time" val="157.26"/>
+          <attnum name="top speed" val="14.6724"/>
+          <attnum name="bottom speed" val="13.7351"/>
+          <attnum name="dammages" val="0"/>
+        </section>
+
+        <section name="2">
+          <attnum name="time" val="148.582"/>
+          <attnum name="best lap time" val="148.582"/>
+          <attnum name="top speed" val="14.5997"/>
+          <attnum name="bottom speed" val="13.7567"/>
+          <attnum name="dammages" val="0"/>
+        </section>
+
+        <section name="3">
+          <attnum name="time" val="148.582"/>
+          <attnum name="best lap time" val="148.582"/>
+          <attnum name="top speed" val="14.5677"/>
+          <attnum name="bottom speed" val="13.7519"/>
+          <attnum name="dammages" val="0"/>
+        </section>
+
+      </section>
+
+    </section>
+
+  </section>
+
+</params>
