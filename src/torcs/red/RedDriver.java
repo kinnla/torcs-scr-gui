@@ -6,7 +6,7 @@ public class RedDriver extends ColorDriver_ {
 
 	@Override
 	public String getParametersPath() {
-		return "./src/torcs/red/parameters.txt";
+		return "./src/torcs/red/parameters.properties";
 	}
 
 }
