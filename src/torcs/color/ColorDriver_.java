@@ -14,7 +14,7 @@ import torcs.scr.SensorModel;
  * stays in first gear - steering follows the track and avoids to come too close
  * to the edges
  */
-public abstract class ColorDriver extends Driver {
+public abstract class ColorDriver_ extends Driver {
 
 	// --------------------- parameters ------------------------------------
 
