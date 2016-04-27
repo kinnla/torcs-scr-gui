@@ -24,6 +24,12 @@ public abstract class ColorDriver extends Driver {
 	static double PANIC_DISTANCE;
 	static double STUCK_ANGLE;
 	static double UNSTUCK_ANGLE;
+	static double MAX_OFFROAD_ACCELERATION;
+	static double MAX_OFFROAD_BRAKE;
+	static int GEAR_UP;
+	static int GEAR_DOWN;
+	static double INHIBIT_BY_STEERING;
+	static double SPEEDING_COURAGE;
 
 	// ----------------------- parameters class ------------------------
 
@@ -41,7 +47,8 @@ public abstract class ColorDriver extends Driver {
 				FileInputStream in = new FileInputStream(parametersPath);
 				load(in);
 			} catch (IOException e) {
-				System.out.println("Can not load parameters file");
+				System.out
+						.println("Error opening parameters file. Abort program.");
 			}
 
 			SAFE_SPEED = Double.parseDouble(getProperty("SAFE_SPEED"));
@@ -56,6 +63,23 @@ public abstract class ColorDriver extends Driver {
 			System.out.println("STUCK_ANGLE: " + STUCK_ANGLE);
 			UNSTUCK_ANGLE = Double.parseDouble(getProperty("UNSTUCK_ANGLE"));
 			System.out.println("UNSTUCK_ANGLE: " + UNSTUCK_ANGLE);
+			MAX_OFFROAD_ACCELERATION = Double
+					.parseDouble(getProperty("MAX_OFFROAD_ACCELERATION"));
+			System.out.println("MAX_OFFROAD_ACCELERATION: "
+					+ MAX_OFFROAD_ACCELERATION);
+			MAX_OFFROAD_BRAKE = Double
+					.parseDouble(getProperty("MAX_OFFROAD_BRAKE"));
+			System.out.println("MAX_OFFROAD_BRAKE: " + MAX_OFFROAD_BRAKE);
+			GEAR_UP = Integer.parseInt(getProperty("GEAR_UP"));
+			System.out.println("GEAR_UP: " + GEAR_UP);
+			GEAR_DOWN = Integer.parseInt(getProperty("GEAR_DOWN"));
+			System.out.println("GEAR_DOWN: " + GEAR_DOWN);
+			INHIBIT_BY_STEERING = Double
+					.parseDouble(getProperty("INHIBIT_BY_STEERING"));
+			System.out.println("INHIBIT_BY_STEERING: " + INHIBIT_BY_STEERING);
+			SPEEDING_COURAGE = Double
+					.parseDouble(getProperty("SPEEDING_COURAGE"));
+			System.out.println("SPEEDING_COURAGE: " + SPEEDING_COURAGE);
 		}
 
 		@Override
@@ -72,8 +96,9 @@ public abstract class ColorDriver extends Driver {
 	}
 
 	/* Gear Changing Constants */
-	static private final int[] gearUp = { 9500, 9500, 9500, 9500, 9500, 0 };
-	static private final int[] gearDown = { 0, 4000, 4200, 4500, 4500, 4500 };
+	// static private final int[] gearUp = { 9500, 9500, 9500, 9500, 9500, 0 };
+	// static private final int[] gearDown = { 0, 4000, 4200, 4500, 4500, 4500
+	// };
 
 	// ------------------------- sensor value fields -------------------------
 
@@ -171,7 +196,8 @@ public abstract class ColorDriver extends Driver {
 
 		// NOT (PANIC) --> STUCKLEFT | STUCKRIGHT
 		if (currentState != Status.PANIC) {
-			if (Math.abs(trackAngle) > Math.PI * STUCK_ANGLE / 180) {
+			// if (Math.abs(trackAngle) > Math.PI * STUCK_ANGLE / 180) {
+			if (Math.abs(trackAngle) > Math.toRadians(STUCK_ANGLE)) {
 				stuckCounter++;
 				if (stuckCounter > 50) {
 					if (trackAngle > 0 && trackPosition < 0) {
@@ -206,33 +232,28 @@ public abstract class ColorDriver extends Driver {
 
 		case START:
 
+			// if we are going backwards, brake first
 			if (speed < -1) {
-				// if we are going backwards, brake first
 				action.brake = 1;
 				action.accelerate = 0;
 				break;
 			}
 
-			// start: set gear and accelerate
+			// set the controls
+			wantedSpeed = SAFE_SPEED;
 			action.gear = 1;
-			System.out.println("set start gear to 1");
-			action.accelerate = 1;
-			action.brake = 0;
-
-			// control steering
 			controlSteering();
-
+			controlBrakeAndAcceleration();
 			break;
 
 		case DRIVE:
 
+			// set the controls
 			computeWantedSpeed();
 			controlGear();
 			controlSteering();
-
+			controlBrakeAndAcceleration();
 			break;
-
-		/* ---------------------- STUCK --------------- */
 
 		case STUCKLEFT:
 
@@ -250,8 +271,6 @@ public abstract class ColorDriver extends Driver {
 			action.steering = 1;
 			break;
 
-		/* ---------------------- PANIC --------------- */
-
 		case PANIC:
 
 			// random behavior, as determined when entering this state
@@ -261,9 +280,6 @@ public abstract class ColorDriver extends Driver {
 		}// end of switch
 
 		/* ----------------------- clean up --------------------- */
-
-		// cap Acceleration
-		controlBrakeAndAcceleration();
 
 		// adjust tick counter
 		tickCounter++;
@@ -287,6 +303,13 @@ public abstract class ColorDriver extends Driver {
 		// System.out.println("trackAngle: " + trackAngle);
 		// System.out.println("delta: " + delta);
 		// System.out.println("pidError: " + pidError);
+		// normalize steering
+		if (action.steering > 0) {
+			action.steering = Math.min(action.steering, 1);
+		} else {
+			action.steering = Math.max(action.steering, -1);
+		}
+
 	}
 
 	// get steering
@@ -340,8 +363,7 @@ public abstract class ColorDriver extends Driver {
 		if (forwardDist > 199) {
 			wantedSpeed = MAX_SPEED;
 		} else {
-			wantedSpeed = Math.max(SAFE_SPEED, Math.sqrt(forwardDist) * 22
-					- Math.abs(direction) * 20);
+			wantedSpeed = Math.max(SAFE_SPEED, Math.sqrt(forwardDist) * SPEEDING_COURAGE);
 			wantedSpeed = Math.min(MAX_SPEED, wantedSpeed);
 		}
 	}
@@ -358,13 +380,13 @@ public abstract class ColorDriver extends Driver {
 
 		// check if the RPM value of car is greater than the one suggested
 		// to shift up the gear from the current one
-		else if (gear < 6 && rpm >= gearUp[gear - 1]) {
+		else if (gear < 6 && rpm >= GEAR_UP) {
 			action.gear = gear + 1;
 		}
 
 		// check if the RPM value of car is lower than the one suggested
 		// to shift down the gear from the current one
-		else if (gear > 1 && rpm <= gearDown[gear - 1]) {
+		else if (gear > 1 && rpm <= GEAR_DOWN) {
 			action.gear = gear - 1;
 		}
 
@@ -375,12 +397,12 @@ public abstract class ColorDriver extends Driver {
 	}
 
 	/**
-	 * control the brake and acceleration based on -
+	 * control the brake and acceleration
 	 */
 	private void controlBrakeAndAcceleration() {
 
-		// PANIC || START: don't control anything
-		if (currentState == Status.PANIC || currentState == Status.START) {
+		// PANIC: don't control anything
+		if (currentState == Status.PANIC) {
 			return;
 		}
 
@@ -422,27 +444,25 @@ public abstract class ColorDriver extends Driver {
 			}
 		}
 
-		// outside track: cap by 50%
+		// off road: limit by offroad coefficient and steering
 		if (Math.abs(trackPosition) > 1) {
-			action.accelerate = Math.min(0.5, action.accelerate);
-			action.brake = Math.min(0.5, action.brake);
+			action.accelerate = Math.min(MAX_OFFROAD_ACCELERATION
+					* (1 - Math.abs(action.steering) * INHIBIT_BY_STEERING),
+					action.accelerate);
+			action.brake = Math
+					.min(MAX_OFFROAD_BRAKE
+							* (1 - Math.abs(action.steering) * INHIBIT_BY_STEERING),
+							action.brake);
 		}
 
-		// small steering angle: don't cap further
-		if (Math.abs(action.steering) < 0.2) {
-			return;
-		}
+		// on road: limit by steering
+		else {
 
-		// normalize steering
-		if (action.steering > 0) {
-			action.steering = Math.min(action.steering, 1);
-		} else {
-			action.steering = Math.max(action.steering, -1);
+			action.accelerate = Math.min(action.accelerate, 1 - Math.abs(action.steering)
+					* INHIBIT_BY_STEERING);
+			action.brake = Math.min(action.brake, 1 - Math.abs(action.steering)
+					* INHIBIT_BY_STEERING);
 		}
-
-		// cap by steering
-		action.accelerate *= (1 - Math.abs(action.steering) / 2);
-		action.brake *= (1 - Math.abs(action.steering) / 2);
 	}
 
 	public void reset() {
