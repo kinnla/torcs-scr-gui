@@ -30,6 +30,11 @@ public abstract class ColorDriver extends Driver {
 	static int GEAR_DOWN;
 	static double INHIBIT_BY_STEERING;
 	static double SPEEDING_COURAGE;
+	static double OFFROAD_ANGLE;
+	static double MIN_EDGE_DISTANCE;
+	static double EDGE_FEAR;
+	static double LATERAL_STRICTNESS;
+	static double LATERAL_TURN;
 
 	// ----------------------- parameters class ------------------------
 
@@ -80,6 +85,18 @@ public abstract class ColorDriver extends Driver {
 			SPEEDING_COURAGE = Double
 					.parseDouble(getProperty("SPEEDING_COURAGE"));
 			System.out.println("SPEEDING_COURAGE: " + SPEEDING_COURAGE);
+			OFFROAD_ANGLE = Double.parseDouble(getProperty("OFFROAD_ANGLE"));
+			System.out.println("OFFROAD_ANGLE: " + OFFROAD_ANGLE);
+			MIN_EDGE_DISTANCE = Double
+					.parseDouble(getProperty("MIN_EDGE_DISTANCE"));
+			System.out.println("MIN_EDGE_DISTANCE: " + MIN_EDGE_DISTANCE);
+			EDGE_FEAR = Double.parseDouble(getProperty("EDGE_FEAR"));
+			System.out.println("EDGE_FEAR: " + EDGE_FEAR);
+			LATERAL_STRICTNESS = Double
+					.parseDouble(getProperty("LATERAL_STRICTNESS"));
+			System.out.println("LATERAL_STRICTNESS: " + LATERAL_STRICTNESS);
+			LATERAL_TURN = Double.parseDouble(getProperty("LATERAL_TURN"));
+			System.out.println("LATERAL_TURN: " + LATERAL_TURN);
 		}
 
 		@Override
@@ -121,7 +138,7 @@ public abstract class ColorDriver extends Driver {
 	// action to be returned
 	private Action action = new Action();
 
-	// forward distance
+	// max forward distance
 	private double forwardDist = 200;
 
 	// direction with the max forward distance
@@ -141,6 +158,9 @@ public abstract class ColorDriver extends Driver {
 
 	// panic action
 	private Action panicAction = null;
+
+	// PID error for steering control
+	double pidError = 0;
 
 	/* -------------------- parameters stuff --------------- */
 
@@ -215,7 +235,7 @@ public abstract class ColorDriver extends Driver {
 			}
 		}
 
-		// ------------------ compute distances -------------------
+		// ------------------ update values -------------------
 
 		forwardDist = 0;
 		for (int i = 7; i < 12; ++i) {
@@ -224,6 +244,8 @@ public abstract class ColorDriver extends Driver {
 				direction = 9 - i;
 			}
 		}
+
+		pidError = trackAngle - wantedAngle;
 
 		/* -------------------- switch on current state -------------------- */
 
@@ -241,6 +263,7 @@ public abstract class ColorDriver extends Driver {
 
 			// set the controls
 			wantedSpeed = SAFE_SPEED;
+			computeWantedAngle();
 			action.gear = 1;
 			controlSteering();
 			controlBrakeAndAcceleration();
@@ -250,6 +273,7 @@ public abstract class ColorDriver extends Driver {
 
 			// set the controls
 			computeWantedSpeed();
+			computeWantedAngle();
 			controlGear();
 			controlSteering();
 			controlBrakeAndAcceleration();
@@ -290,80 +314,64 @@ public abstract class ColorDriver extends Driver {
 
 	/* ----------------------- control steering --------------------- */
 
-	// control steering by wanted angle
-	private void controlSteering() {
-		double pidError = trackAngle - wantedAngle;
-		double wantedAngle = computeWantedAngle();
-		double delta = trackAngle - wantedAngle;
-		action.steering = 1.8 * delta + 1.8 * pidError + 0.00
-				* Math.signum(delta);
-
-		// System.out.println("action.steering: " + action.steering);
-		// System.out.println("wantedAngle: " + wantedAngle);
-		// System.out.println("trackAngle: " + trackAngle);
-		// System.out.println("delta: " + delta);
-		// System.out.println("pidError: " + pidError);
-		// normalize steering
-		if (action.steering > 0) {
-			action.steering = Math.min(action.steering, 1);
-		} else {
-			action.steering = Math.max(action.steering, -1);
-		}
-
-	}
-
 	// get steering
-	private double computeWantedAngle() {
+	private void computeWantedAngle() {
 
 		// if left outside the track, steer right
 		if (trackPosition > 1) {
-			return Math.toRadians(20);
+			wantedAngle = Math.toRadians(OFFROAD_ANGLE);
+			return;
 		}
+
 		// if right outside the track, steer left
 		if (trackPosition < -1) {
-			return Math.toRadians(-20);
+			wantedAngle = Math.toRadians(-OFFROAD_ANGLE);
+			return;
 		}
 
 		// close to the left edge
-		if (trackEdges[0] < 3.0 && Math.abs(Math.toDegrees(trackAngle)) < 40) {
-			return Math.toRadians((3 - trackEdges[0]) * 8);
+		if (trackEdges[0] < MIN_EDGE_DISTANCE
+				&& Math.abs(Math.toDegrees(trackAngle)) < 40) {
+			wantedAngle = Math.toRadians((MIN_EDGE_DISTANCE - trackEdges[0])
+					* EDGE_FEAR);
+			return;
 		}
 
 		// close to the right edge
-		if (trackEdges[18] < 3.0 && Math.abs(Math.toDegrees(trackAngle)) < 40) {
-			return Math.toRadians((3 - trackEdges[18]) * -8);
+		if (trackEdges[18] < MIN_EDGE_DISTANCE
+				&& Math.abs(Math.toDegrees(trackAngle)) < 40) {
+			wantedAngle = -Math.toRadians((MIN_EDGE_DISTANCE - trackEdges[18])
+					* EDGE_FEAR);
+			return;
 		}
 
-		// otherwise get angle by direction and trackPosition
-		if (direction == 0) {
-			return 0.1 * (trackPosition - 0.5);
+		// default case: steer as the track angle
+		wantedAngle = 0;
+
+		// wanted lateral position depending on straight strack or turn
+		if (direction < 0) {
+			// right turn
+			wantedAngle -= (LATERAL_TURN - trackPosition) * LATERAL_STRICTNESS;
 		}
-		if (direction == 1) {
-			return 1.1 * (trackPosition - 0.7);
-		}
-		if (direction == -1) {
-			return 1.1 * (trackPosition - 0.3);
-		}
-		if (direction == 2) {
-			return 1.1 * (trackPosition - 0.8);
-		}
-		if (direction == -2) {
-			return 1.1 * (trackPosition - 0.2);
+		if (direction > 0) {
+			// left turn
+			wantedAngle += (trackPosition + LATERAL_TURN) * LATERAL_STRICTNESS;
 		}
 
-		return 0;
+		// adjust according to wanted lateral position
+		// wantedAngle += (wantedLateral- trackPosition) * LATERAL_STRICTNESS;
 	}
 
 	/**
-	 * Computes the wanted speed (for state DRIVE only)
-	 * 
+	 * Computes the wanted speed (for states START and DRIVE)
 	 */
 	private void computeWantedSpeed() {
 		// evaluate trackedgesensors to determine wanted speed
 		if (forwardDist > 199) {
 			wantedSpeed = MAX_SPEED;
 		} else {
-			wantedSpeed = Math.max(SAFE_SPEED, Math.sqrt(forwardDist) * SPEEDING_COURAGE);
+			wantedSpeed = Math.max(SAFE_SPEED, Math.sqrt(forwardDist)
+					* SPEEDING_COURAGE);
 			wantedSpeed = Math.min(MAX_SPEED, wantedSpeed);
 		}
 	}
@@ -393,6 +401,27 @@ public abstract class ColorDriver extends Driver {
 		// otherwhise keep current gear
 		else {
 			action.gear = gear;
+		}
+	}
+
+	/**
+	 * control steering by wanted angle
+	 */
+	private void controlSteering() {
+		double deltaAngle = trackAngle - wantedAngle;
+		action.steering = 1.8 * deltaAngle + 1.8 * pidError + 0.0
+				* Math.signum(deltaAngle);
+
+		// System.out.println("action.steering: " + action.steering);
+		// System.out.println("wantedAngle: " + wantedAngle);
+		// System.out.println("trackAngle: " + trackAngle);
+		// System.out.println("delta: " + delta);
+		// System.out.println("pidError: " + pidError);
+		// normalize steering
+		if (action.steering > 0) {
+			action.steering = Math.min(action.steering, 1);
+		} else {
+			action.steering = Math.max(action.steering, -1);
 		}
 	}
 
@@ -446,20 +475,20 @@ public abstract class ColorDriver extends Driver {
 
 		// off road: limit by offroad coefficient and steering
 		if (Math.abs(trackPosition) > 1) {
-			action.accelerate = Math.min(MAX_OFFROAD_ACCELERATION
-					* (1 - Math.abs(action.steering) * INHIBIT_BY_STEERING),
-					action.accelerate);
-			action.brake = Math
-					.min(MAX_OFFROAD_BRAKE
-							* (1 - Math.abs(action.steering) * INHIBIT_BY_STEERING),
-							action.brake);
+			action.accelerate = Math.min(
+					MAX_OFFROAD_ACCELERATION
+							* (1 - Math.abs(action.steering)
+									* INHIBIT_BY_STEERING), action.accelerate);
+			action.brake = Math.min(
+					MAX_OFFROAD_BRAKE
+							* (1 - Math.abs(action.steering)
+									* INHIBIT_BY_STEERING), action.brake);
 		}
 
 		// on road: limit by steering
 		else {
-
-			action.accelerate = Math.min(action.accelerate, 1 - Math.abs(action.steering)
-					* INHIBIT_BY_STEERING);
+			action.accelerate = Math.min(action.accelerate,
+					1 - Math.abs(action.steering) * INHIBIT_BY_STEERING);
 			action.brake = Math.min(action.brake, 1 - Math.abs(action.steering)
 					* INHIBIT_BY_STEERING);
 		}
