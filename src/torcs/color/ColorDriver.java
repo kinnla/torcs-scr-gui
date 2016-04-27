@@ -18,11 +18,52 @@ public abstract class ColorDriver extends Driver {
 
 	// --------------------- parameters ------------------------------------
 
-	// safe speed
 	static double SAFE_SPEED;
-
-	// max speed
 	static double MAX_SPEED;
+	static int PANIC_TICKS;
+	static double PANIC_DISTANCE;
+	static double STUCK_ANGLE;
+	static double UNSTUCK_ANGLE;
+
+	// ----------------------- parameters class ------------------------
+
+	static class DriverParameters extends Properties implements Runnable {
+
+		private String parametersPath;
+
+		DriverParameters(String parametersPath) {
+			this.parametersPath = parametersPath;
+			load();
+		}
+
+		private void load() {
+			try {
+				FileInputStream in = new FileInputStream(parametersPath);
+				load(in);
+			} catch (IOException e) {
+				System.out.println("Can not load parameters file");
+			}
+
+			SAFE_SPEED = Double.parseDouble(getProperty("SAFE_SPEED"));
+			System.out.println("SAFE_SPEED: " + SAFE_SPEED);
+			MAX_SPEED = Double.parseDouble(getProperty("MAX_SPEED"));
+			System.out.println("MAX_SPEED: " + MAX_SPEED);
+			PANIC_TICKS = Integer.parseInt(getProperty("PANIC_TICKS"));
+			System.out.println("PANIC_TICKS: " + PANIC_TICKS);
+			PANIC_DISTANCE = Double.parseDouble(getProperty("PANIC_DISTANCE"));
+			System.out.println("PANIC_DISTANCE: " + PANIC_DISTANCE);
+			STUCK_ANGLE = Double.parseDouble(getProperty("STUCK_ANGLE"));
+			System.out.println("STUCK_ANGLE: " + STUCK_ANGLE);
+			UNSTUCK_ANGLE = Double.parseDouble(getProperty("UNSTUCK_ANGLE"));
+			System.out.println("UNSTUCK_ANGLE: " + UNSTUCK_ANGLE);
+		}
+
+		@Override
+		public void run() {
+
+		}
+
+	}
 
 	// --------------------- constants ------------------------------------
 
@@ -98,14 +139,14 @@ public abstract class ColorDriver extends Driver {
 
 		/* ----------------------- detect Status ----------------------- */
 
-		// System.out.println(sensors.getDistanceRaced());
-
 		// X --> PANIC
-		if (tickCounter % 250 == 249) {
-			if (Math.abs(distanceRaced - distanceRacedMem) < 2.0) {
+		// PANIC --> START
+		if (tickCounter % PANIC_TICKS == PANIC_TICKS - 1) {
+			if (Math.abs(distanceRaced - distanceRacedMem) < PANIC_DISTANCE) {
 				currentState = Status.PANIC;
 				System.out.println("PANIC !!!");
 				action.accelerate = Math.random();
+				action.brake = 0;
 				action.steering = Math.random();
 				action.gear = Math.random() > 0.5 ? -1 : 1;
 				panicAction = action;
@@ -123,14 +164,14 @@ public abstract class ColorDriver extends Driver {
 		// STUCKLEFT | STUCKRIGHT --> START
 		if (currentState == Status.STUCKLEFT
 				|| currentState == Status.STUCKRIGHT) {
-			if (Math.abs(trackAngle) < Math.PI * 30 / 180) {
+			if (Math.abs(trackAngle) < Math.PI * UNSTUCK_ANGLE / 180) {
 				currentState = Status.START;
 			}
 		}
 
 		// NOT (PANIC) --> STUCKLEFT | STUCKRIGHT
 		if (currentState != Status.PANIC) {
-			if (Math.abs(trackAngle) > Math.PI * 40 / 180) {
+			if (Math.abs(trackAngle) > Math.PI * STUCK_ANGLE / 180) {
 				stuckCounter++;
 				if (stuckCounter > 50) {
 					if (trackAngle > 0 && trackPosition < 0) {
@@ -166,7 +207,7 @@ public abstract class ColorDriver extends Driver {
 		case START:
 
 			if (speed < -1) {
-				// if we are not going backwards, brake first
+				// if we are going backwards, brake first
 				action.brake = 1;
 				action.accelerate = 0;
 				break;
@@ -176,6 +217,7 @@ public abstract class ColorDriver extends Driver {
 			action.gear = 1;
 			System.out.println("set start gear to 1");
 			action.accelerate = 1;
+			action.brake = 0;
 
 			// control steering
 			controlSteering();
@@ -311,26 +353,25 @@ public abstract class ColorDriver extends Driver {
 
 		// if gear is 0 (N) or -1 (R) just return 1
 		if (gear < 1) {
-			System.out.println("gear 1, rmp: " + rpm);
 			action.gear = 1;
 		}
 
 		// check if the RPM value of car is greater than the one suggested
 		// to shift up the gear from the current one
 		else if (gear < 6 && rpm >= gearUp[gear - 1]) {
-			System.out.println("gearup: " + (gear + 1) + ", rmp: " + rpm);
 			action.gear = gear + 1;
 		}
 
 		// check if the RPM value of car is lower than the one suggested
 		// to shift down the gear from the current one
 		else if (gear > 1 && rpm <= gearDown[gear - 1]) {
-			System.out.println("geardown: " + (gear - 1) + ", rmp: " + rpm);
 			action.gear = gear - 1;
 		}
 
 		// otherwhise keep current gear
-		action.gear = gear;
+		else {
+			action.gear = gear;
+		}
 	}
 
 	/**
@@ -338,8 +379,8 @@ public abstract class ColorDriver extends Driver {
 	 */
 	private void controlBrakeAndAcceleration() {
 
-		// PANIC: don't control anything
-		if (currentState == Status.PANIC) {
+		// PANIC || START: don't control anything
+		if (currentState == Status.PANIC || currentState == Status.START) {
 			return;
 		}
 
@@ -410,34 +451,5 @@ public abstract class ColorDriver extends Driver {
 
 	public void shutdown() {
 		System.out.println("Bye bye!");
-	}
-
-	// ----------------------- parameters class ------------------------
-
-	static class DriverParameters extends Properties implements Runnable {
-
-		private String parametersPath;
-
-		DriverParameters(String parametersPath) {
-			this.parametersPath = parametersPath;
-			load();
-		}
-
-		private void load() {
-			try {
-				FileInputStream in = new FileInputStream(parametersPath);
-				load(in);
-			} catch (IOException e) {
-				System.out.println("Can not load parameters file");
-			}
-
-			SAFE_SPEED = Double.parseDouble(getProperty("SAFE_SPEED"));
-		}
-
-		@Override
-		public void run() {
-
-		}
-
 	}
 }
