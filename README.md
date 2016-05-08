@@ -27,6 +27,7 @@ A remote-control for the TORCS scr 2013 server patch and a parameterized driver
 * Java 1.7
 * TORCS V 1.3.4 http://torcs.sourceforge.net/
 * The 2013 SCR Server Patch http://sourceforge.net/projects/cig/files/SCR%20Championship/
+
 The software was designed to run out of the box, so alternatively you can download the whole repository (approx 500 MB) and then run start.bat.
 
 Screenshot of the TORCS GUI: 
