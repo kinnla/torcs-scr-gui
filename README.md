@@ -1,9 +1,10 @@
 # torcs-scr-gui
-A remote-control for the TORCS scr 2013 server patch.
+A remote-control for the TORCS scr 2013 server patch and a parameterized driver
 
 * Do you like race car simulators? TORCS is a great one, and it's open source.
 * Do you like to code your own driver-AI? Install the SCR server patch, which offers a network interface, inspired by the sensor data autonomous race cars can get via LiDAR, RADAR and cameras.
 * Do you like to start a race with several SCR driver clients written in Java? Then download this GUI.
+* If you don't like to code or don't know how to code, there is a parameterized driver included, which comes in seven colors.
  
 ## Features
 * Searchs a given directory and lists all Drivers (Java classes named "*Driver.java")
@@ -26,13 +27,15 @@ A remote-control for the TORCS scr 2013 server patch.
 * Java 1.7
 * TORCS V 1.3.4 http://torcs.sourceforge.net/
 * The 2013 SCR Server Patch http://sourceforge.net/projects/cig/files/SCR%20Championship/
- 
+
+The software was designed to run out of the box, so alternatively you can download the whole repository (approx 500 MB) and then run start.bat.
+
 Screenshot of the TORCS GUI: 
 ![alt text](https://raw.githubusercontent.com/kinnla/torcs-scr-gui/master/torcs-gui.PNG "Screenshot of the TORCS GUI")
 
 
 ## Credits
 This GUI was developed in the context of the lecture "ProInformatik III -- Objektorientierte Programmierung" 2015 at Freie Universität Berlin. http://www.fu-berlin.de/vv/de/lv/216597
-Thanks to Bernhard Wymann for the hint, how to replace the driver names in TORCS!
+Thanks to Bernhard Wymann for his support and maintaining TORCS!
 
-This repository contains (modified) files that are part of TORCS, and the (modified) SCR Java Client.
+This repository contains a snapshot of a windows install of TORCS, with the SCR patch applied to. The parameterized driver builds on top of the SCR Java Client. 
