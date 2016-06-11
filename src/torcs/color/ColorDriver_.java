@@ -38,7 +38,7 @@ public abstract class ColorDriver_ extends Driver {
 
 	// ----------------------- parameters class ------------------------
 
-	static class DriverParameters extends Properties implements Runnable {
+	static class DriverParameters extends Properties {
 
 		private String parametersPath;
 
@@ -97,11 +97,6 @@ public abstract class ColorDriver_ extends Driver {
 			System.out.println("LATERAL_STRICTNESS: " + LATERAL_STRICTNESS);
 			LATERAL_TURN = Double.parseDouble(getProperty("LATERAL_TURN"));
 			System.out.println("LATERAL_TURN: " + LATERAL_TURN);
-		}
-
-		@Override
-		public void run() {
-
 		}
 
 	}
@@ -166,8 +161,7 @@ public abstract class ColorDriver_ extends Driver {
 
 	public abstract String getParametersPath();
 
-	private DriverParameters parameters = new DriverParameters(
-			getParametersPath());
+	private DriverParameters parameters;
 
 	/* ----------------------- main control loop ----------------------- */
 
@@ -181,6 +175,13 @@ public abstract class ColorDriver_ extends Driver {
 		speed = sensors.getSpeed();
 		trackPosition = sensors.getTrackPosition();
 		distanceRaced = sensors.getDistanceRaced();
+		
+		// reload parameters once per second
+		if (tickCounter % 40 == 0) {
+			parameters = new DriverParameters(
+					getParametersPath());
+			
+		}
 
 		/* ----------------------- detect Status ----------------------- */
 
