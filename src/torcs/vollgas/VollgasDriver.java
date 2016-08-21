@@ -119,7 +119,6 @@ public class VollgasDriver extends Driver {
 					.toRadians(STUCK_ANGLE);
 			lowSpeed = Math.abs(m.speed) + Math.abs(m.lateralSpeed) < LOW_SPEED;
 			towardsTrackCenter = (m.angleToTrackAxis > 0) == (m.trackPosition > 0);
-			System.out.println("towardsTrackCenter " + towardsTrackCenter);
 		}
 	}
 
