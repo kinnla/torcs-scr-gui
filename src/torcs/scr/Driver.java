@@ -32,7 +32,9 @@ public abstract class Driver {
 
 	public abstract Action control(SensorModel sensors);
 
-	public abstract void shutdown();
+	public void shutdown() {
+		System.out.println("shutdown");
+	}
 
 	public void setVerbose(boolean verbose) {
 		this.verbose = verbose;
