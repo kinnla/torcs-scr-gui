@@ -1,4 +1,4 @@
-package torcs.unstuck;
+package torcs.vollgas;
 
 import torcs.scr.Action;
 import torcs.scr.Driver;
@@ -10,7 +10,7 @@ import torcs.scr.SensorModel;
  * stays in first gear - steering follows the track and avoids to come too close
  * to the edges
  */
-public class UnstuckDriver extends Driver {
+public class VollgasDriver extends Driver {
 
 	// ------------------ constants
 
@@ -43,7 +43,7 @@ public class UnstuckDriver extends Driver {
 	private Action action = new Action();
 
 	// ------------------------- Constructor
-	public UnstuckDriver() {
+	public VollgasDriver() {
 		System.out.println("This is UnstuckDriver on track " + getTrackName());
 		System.out.println("This is a race " + (damage ? "with" : "without")
 				+ " damage.");
@@ -128,7 +128,7 @@ public class UnstuckDriver extends Driver {
 		// standard driving behaviour
 		DRIVE {
 			@Override
-			void updateStatus(UnstuckDriver driver) {
+			void updateStatus(VollgasDriver driver) {
 
 				// check, if stuck and we shall go backwards
 				if (driver.temp.sharpAngle && driver.temp.lowSpeed
@@ -144,9 +144,9 @@ public class UnstuckDriver extends Driver {
 			}
 
 			@Override
-			void computeAction(Action a, UnstuckDriver d) {
+			void computeAction(Action a, VollgasDriver d) {
 				a.gear = d.controlGear();
-				a.steering = d.model.angleToTrackAxis;
+				a.steering = d.model.angleToTrackAxis; // TODO
 				a.accelerate = 1; // TODO
 				a.brake = 0; // TODO
 			}
@@ -155,7 +155,7 @@ public class UnstuckDriver extends Driver {
 		// driving offroad (head back towards track, no full acceleration)
 		OFF_TRACK {
 			@Override
-			void updateStatus(UnstuckDriver driver) {
+			void updateStatus(VollgasDriver driver) {
 
 				// check, if stuck and we shall go backwards
 				if (driver.temp.sharpAngle && driver.temp.lowSpeed
@@ -171,7 +171,7 @@ public class UnstuckDriver extends Driver {
 			}
 
 			@Override
-			void computeAction(Action a, UnstuckDriver d) {
+			void computeAction(Action a, VollgasDriver d) {
 				a.gear = d.controlGear();
 				a.steering = OFFTRACK_ANGLE
 						* -Math.signum(d.model.trackPosition)
@@ -189,7 +189,7 @@ public class UnstuckDriver extends Driver {
 		// heading backwards in order to unstuck
 		BACK {
 			@Override
-			void updateStatus(UnstuckDriver d) {
+			void updateStatus(VollgasDriver d) {
 
 				// check if direction is ok again
 				if (d.temp.towardsTrackCenter && Math.abs(d.model.angleToTrackAxis) < STUCK_ANGLE) {
@@ -198,7 +198,7 @@ public class UnstuckDriver extends Driver {
 			}
 
 			@Override
-			void computeAction(Action a, UnstuckDriver d) {
+			void computeAction(Action a, VollgasDriver d) {
 				a.gear = -1;
 				a.steering = Math.signum(d.model.trackPosition);
 				if (!d.temp.onTrack && a.steering > 0.3) {
@@ -215,7 +215,7 @@ public class UnstuckDriver extends Driver {
 		// car shall halt
 		HALT {
 			@Override
-			void updateStatus(UnstuckDriver driver) {
+			void updateStatus(VollgasDriver driver) {
 
 				// if speed is low, switch to drive
 				if (driver.temp.lowSpeed) {
@@ -224,7 +224,7 @@ public class UnstuckDriver extends Driver {
 			}
 
 			@Override
-			void computeAction(Action a, UnstuckDriver d) {
+			void computeAction(Action a, VollgasDriver d) {
 				a.gear = 0;
 				a.steering = 0;
 				a.accelerate = 0;
@@ -233,10 +233,10 @@ public class UnstuckDriver extends Driver {
 		};
 
 		// updates the current status
-		abstract void updateStatus(UnstuckDriver driver);
+		abstract void updateStatus(VollgasDriver driver);
 
 		// computes the action
-		abstract void computeAction(Action a, UnstuckDriver d);
+		abstract void computeAction(Action a, VollgasDriver d);
 	}
 
 }
