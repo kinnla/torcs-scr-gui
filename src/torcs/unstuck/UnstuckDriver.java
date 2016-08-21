@@ -12,79 +12,210 @@ import torcs.scr.SensorModel;
  */
 public class UnstuckDriver extends Driver {
 
-	// counting each time that control is called
-	private int tickcounter = 0;
+	// ------------------ constants
 
-	public Action control(SensorModel model) {
+	// rpm threshold to gear up
+	static final int GEAR_UP = 8000;
 
-		// adjust tick counter
-		tickcounter++;
+	// rpm threshold to gear down
+	static final int GEAR_DOWN = 5000;
 
-		// check, if we just started the race
-		if (tickcounter == 1) {
-			System.out.println("This is Simple Driver on track "
-					+ getTrackName());
-			System.out.println("This is a race "
-					+ (damage ? "with" : "without") + " damage.");
-		}
+	// minimum angle to trigger an unstuck
+	static final double STUCK_ANGLE = Math.toRadians(30);
 
-		// create new action object to send our commands to the server
-		Action action = new Action();
+	// angle that the car aims to have when driving back to the track
+	static final double OFFTRACK_ANGLE = Math.toRadians(20);
 
-		// ---------------- compute wanted speed ----------------------
+	// threshold for a low speed
+	static final int LOW_SPEED = 5;
 
-		double maxDistance = model.trackEdgeSensors[0];
-		for (double d : model.trackEdgeSensors) {
-			maxDistance = Math.max(maxDistance, d);
-		}
-		double targetSpeed = 14.4 * Math.sqrt(maxDistance);
+	// ------------------ private fields
 
-		/*
-		 * ----------------------- control velocity --------------------
-		 */
+	// sensor model to be updated every 20ms
+	SensorModel model = null;
 
-		// simply accelerate until we reach our target speed.
-		if (model.speed < targetSpeed) {
-			action.accelerate = Math.min((targetSpeed - model.speed) / 10, 1);
-		} else {
-			action.brake = Math.min((model.speed - targetSpeed) / 10, 1);
-		}
-		assert action.brake * action.accelerate < 0.1;
+	Status status = Status.DRIVE;
 
-		// ------------------- control gear ------------------------
+	// temporary data
+	TempData temp = new TempData();
 
-		if (action.accelerate > 0 && model.rpm > 9000
-				&& model.gear < 6) {
-			action.gear = model.gear + 1;
-		} else if (action.brake > 0 && model.rpm < 6000
-				&& model.gear > 1) {
-			action.gear = model.gear - 1;
-		} else if (model.rpm < 3000 && model.gear > 1) {
-			action.gear = model.gear - 1;
-		} else {
-			action.gear = model.gear;
-		}
+	// action object to send our commands to the server
+	private Action action = new Action();
 
-		/*
-		 * ----------------------- control steering ---------------------
-		 */
+	// ------------------------- Constructor
+	public UnstuckDriver() {
+		System.out.println("This is UnstuckDriver on track " + getTrackName());
+		System.out.println("This is a race " + (damage ? "with" : "without") + " damage.");
+	}
 
-		// follow the track
-		action.steering = model.angleToTrackAxis * 0.75;
+	// ------------------ public methods
 
-		// avoid to come too close to the edges
-		if (model.trackEdgeSensors[0] < 3.0) {
-			action.steering -= (5.0 - model.trackEdgeSensors[0]) * 0.05;
-		}
-		if (model.trackEdgeSensors[18] < 3.0) {
-			action.steering += (5.0 - model.trackEdgeSensors[18]) * 0.05;
-		}
+	// main control loop
+	public Action control(SensorModel m) {
 
-		// return the action
+		// update sensor model
+		this.model = m;
+
+		// update status and temp values
+		status.updateStatus(this);
+		temp.update(m);
+
+		// compute and return action
+		status.computeAction(action, this);
 		return action;
 	}
 
-	public void shutdown() {
-		System.out.println("Bye bye!");
+	// Sets the next gear based on rpm and current gear
+	int controlGear() {
+
+		// if gear is 0 (N) or -1 (R) just return 1
+		if (model.gear < 1) {
+			return 1;
+		}
+
+		// check if the RPM value of car is greater than the one suggested
+		// to shift up the gear from the current one
+		else if (model.gear < 6 && model.rpm >= GEAR_UP) {
+			return model.gear + 1;
+		}
+
+		// check if the RPM value of car is lower than the one suggested
+		// to shift down the gear from the current one
+		else if (model.gear > 1 && model.rpm <= GEAR_DOWN) {
+			return model.gear - 1;
+		}
+
+		// otherwhise keep current gear
+		else {
+			return model.gear;
+		}
 	}
+
+	// encapsulates temporary values that help us to compute the driver's
+	// behavior
+	class TempData {
+
+		// indicating whethere the car is on track
+		boolean onTrack = true;
+
+		// indicates whether the car has a sharp angle related to track
+		// direction
+		boolean sharpAngle = false;
+
+		// indicates whether the car's speed (both x and y) is low
+		boolean lowSpeed = true;
+
+		// indicates whether the car's direction is towards the middle of the
+		// track
+		boolean towardsTrackCenter = true;
+
+		// updates the temporary values.
+		// to be called once per tick
+		void update(SensorModel m) {
+			onTrack = Math.abs(m.trackPosition) < 1;
+			sharpAngle = Math.abs(m.angleToTrackAxis) > Math.toRadians(STUCK_ANGLE);
+			lowSpeed = Math.abs(m.speed) + Math.abs(m.lateralSpeed) < LOW_SPEED;
+			towardsTrackCenter = m.angleToTrackAxis > 0 && m.trackPosition < 0;
+		}
+	}
+
+	private enum Status {
+
+		// standard driving behaviour
+		DRIVE {
+			@Override
+			void updateStatus(UnstuckDriver driver) {
+
+				// check, if stuck and we shall go backwards
+				if (driver.temp.sharpAngle && driver.temp.lowSpeed && !driver.temp.towardsTrackCenter) {
+					driver.status = BACK;
+				}
+
+				// check if off road
+				if (!driver.temp.onTrack) {
+					driver.status = OFF_TRACK;
+				}
+			}
+
+			@Override
+			void computeAction(Action a, UnstuckDriver d) {
+				a.gear = d.controlGear();
+				a.steering = 0; // TODO
+				a.accelerate = 1; //TODO
+				a.brake = 0; //TODO
+			}
+		},
+
+		// driving offroad (head back towards track, no full acceleration)
+		OFF_TRACK {
+			@Override
+			void updateStatus(UnstuckDriver driver) {
+
+				// check, if stuck and we shall go backwards
+				if (driver.temp.sharpAngle && driver.temp.lowSpeed && !driver.temp.towardsTrackCenter) {
+					driver.status = BACK;
+				}
+
+				// check if off road
+				if (!driver.temp.onTrack) {
+					driver.status = OFF_TRACK;
+				}
+			}
+
+			@Override
+			void computeAction(Action a, UnstuckDriver d) {
+				a.gear = d.controlGear();
+				a.steering = OFFTRACK_ANGLE * Math.signum(d.model.trackPosition) + d.model.angleToTrackAxis;
+				a.accelerate = 0.5;
+				a.brake = 0;
+			}
+		},
+
+		// heading backwars in order to unstuck
+		BACK {
+			@Override
+			void updateStatus(UnstuckDriver driver) {
+
+				// check if direction is ok again
+				if (driver.temp.towardsTrackCenter) {
+					driver.status = HALT;
+				}
+			}
+
+			@Override
+			void computeAction(Action a, UnstuckDriver d) {
+				a.gear = -1;
+				a.steering = Math.signum(d.model.trackPosition);
+				a.accelerate = 0.5;
+				a.brake = 0;
+			}
+		},
+
+		// car shall halt
+		HALT {
+			@Override
+			void updateStatus(UnstuckDriver driver) {
+
+				// if speed is low, switch to drive
+				if (driver.temp.lowSpeed) {
+					driver.status = DRIVE;
+				}
+			}
+
+			@Override
+			void computeAction(Action a, UnstuckDriver d) {
+				a.gear = 0;
+				a.steering = 0;
+				a.accelerate = 0;
+				a.brake = 1;
+			}
+		};
+
+		// updates the current status 
+		abstract void updateStatus(UnstuckDriver driver);
+
+		// computes the action
+		abstract void computeAction(Action a, UnstuckDriver d);
+	}
+
 }
