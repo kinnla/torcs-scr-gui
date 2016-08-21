@@ -172,15 +172,14 @@ public class VollgasDriver extends Driver {
 			@Override
 			void computeAction(Action a, VollgasDriver d) {
 				a.gear = d.controlGear();
-				a.steering = OFFTRACK_ANGLE
-						* -Math.signum(d.model.trackPosition)
+				a.steering = OFFTRACK_ANGLE * -d.model.trackPosition / 2
 						+ d.model.angleToTrackAxis;
 				if (a.steering > 0.3) {
 					a.steering = 0.3;
 				} else if (a.steering < -0.3) {
 					a.steering = -0.3;
 				}
-				a.accelerate = 0.6;
+				a.accelerate = 0.6; // TODO
 				a.brake = 0;
 			}
 		},
@@ -191,7 +190,8 @@ public class VollgasDriver extends Driver {
 			void updateStatus(VollgasDriver d) {
 
 				// check if direction is ok again
-				if (d.temp.towardsTrackCenter && Math.abs(d.model.angleToTrackAxis) < STUCK_ANGLE) {
+				if (d.temp.towardsTrackCenter
+						&& (Math.abs(d.model.angleToTrackAxis) < STUCK_ANGLE || d.temp.lowSpeed)) {
 					d.status = HALT;
 				}
 			}
