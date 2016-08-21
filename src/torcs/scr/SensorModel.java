@@ -1,58 +1,49 @@
 package torcs.scr;
 
-/**
- * Created by IntelliJ IDEA.
- * User: Administrator
- * Date: Mar 4, 2008
- * Time: 12:18:47 PM
- */
-public interface SensorModel {
+public class SensorModel {
 
-    // basic information about your car and the track (you probably should take care of these somehow)
+	// basic information about your car and the track
+	// (you probably should take care of these somehow)
 
-    public double getSpeed ();
+	public double speed = 0;
 
-    public double getAngleToTrackAxis ();
+	public double angleToTrackAxis = 0;
 
-    public double[] getTrackEdgeSensors ();
-    
-    public double[] getFocusSensors ();//ML
+	public double[] trackEdgeSensors = new double[19];
 
-    public double getTrackPosition();
+	public double[] focusSensors = new double[5];
 
-    public int getGear ();
+	public double trackPosition = 0;
 
-    // basic information about other cars (only useful for multi-car races)
+	public int gear = 0;
 
-    public double[] getOpponentSensors ();
+	// basic information about other cars (only useful for multi-car races)
 
-    public int getRacePosition ();
+	public double[] opponentSensors = new double[36];
 
-    // additional information (use if you need)
+	public int racePosition = 0;
 
-    public double getLateralSpeed ();
-    
+	// additional information (use if you need)
 
-    public double getCurrentLapTime ();
+	public double lateralSpeed = 0;
 
-    public double getDamage ();
+	public double currentLapTime = 0;
 
-    public double getDistanceFromStartLine ();
+	public double damage = 0;
 
-    public double getDistanceRaced ();
+	public double distanceFromStartLine = 0;
 
-    public double getFuelLevel ();
+	public double distanceRaced = 0;
 
-    public double getLastLapTime ();
+	public double fuelLevel = 0;
 
-    public double getRPM ();
+	public double lastLapTime = 0;
 
-    public double[] getWheelSpinVelocity ();
-    
-    public double getZSpeed ();
-    
-    public double getZ ();
-    
-    public String getMessage();
-    
+	public double rpm = 0;
+
+	public double[] wheelSpinVelocity = new double[4];
+
+	public double zSpeed = 0;
+
+	public double z;
 }

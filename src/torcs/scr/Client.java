@@ -48,7 +48,7 @@ public class Client {
 	 */
 	public static void main(String[] args) {
 
-		// read parameters from input stream
+		// read parameters
 		parseParameters(args);
 
 		// set log file
@@ -62,6 +62,7 @@ public class Client {
 		}
 
 		SocketHandler mySocket = new SocketHandler(host, port, verbose);
+		MessageParser parser = new MessageParser();
 		String inMsg;
 
 		Driver driver = load(args[0]);
@@ -114,8 +115,8 @@ public class Client {
 
 					try {
 						Action action = new Action();
-						action = driver.control(new MessageBasedSensorModel(
-								inMsg));
+						SensorModel model = parser.parse(inMsg);
+						action = driver.control(model);
 
 						currStep++;
 						mySocket.send(action.toString());
