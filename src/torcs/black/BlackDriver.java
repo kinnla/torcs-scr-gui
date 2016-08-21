@@ -6,7 +6,7 @@ public class BlackDriver extends ColorDriver_ {
 
 	@Override
 	public String getParametersPath() {
-		return "./src/torcs/white/parameters.properties";
+		return "./src/torcs/black/parameters.properties";
 	}
 
 }
