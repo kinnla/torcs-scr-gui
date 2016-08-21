@@ -60,9 +60,73 @@ public class MessageParser {
 
 		trackPos((String[] input, SensorModel model) -> {
 			model.trackPosition = Double.parseDouble(input[1]);
-		});
+		}),
 
-		private Parser parser;
+		curLapTime((String[] input, SensorModel model) -> {
+			model.currentLapTime = Double.parseDouble(input[1]);
+		}),
+		
+		damage((String[] input, SensorModel model) -> {
+			model.damage = Integer.parseInt(input[1]);
+		}),
+		
+		distFromStart((String[] input, SensorModel model) -> {
+			model.distanceFromStartLine = Double.parseDouble(input[1]);
+		}),
+		
+		distRaced((String[] input, SensorModel model) -> {
+			model.distanceRaced = Double.parseDouble(input[1]);
+		}),
+		
+		fuel((String[] input, SensorModel model) -> {
+			model.fuelLevel = Double.parseDouble(input[1]);
+		}),
+		
+		gear((String[] input, SensorModel model) -> {
+			model.gear = Integer.parseInt(input[1]);
+		}),
+		
+		lastLapTime((String[] input, SensorModel model) -> {
+			model.lastLapTime = Double.parseDouble(input[1]);
+		}),
+		
+		racePos((String[] input, SensorModel model) -> {
+			model.racePosition = Integer.parseInt(input[1]);
+		}),
+		
+		rpm((String[] input, SensorModel model) -> {
+			model.rpm = Double.parseDouble(input[1]);
+		}),
+
+		speedX((String[] input, SensorModel model) -> {
+			model.speed = Double.parseDouble(input[1]);
+		}),
+		
+		speedY((String[] input, SensorModel model) -> {
+			model.lateralSpeed = Double.parseDouble(input[1]);
+		}),
+
+		speedZ((String[] input, SensorModel model) -> {
+			model.zSpeed = Double.parseDouble(input[1]);
+		}),
+		
+		wheelSpinVel((String[] input, SensorModel model) -> {
+			for (int i = 1; i < input.length; ++i) {
+				model.wheelSpinVelocity[i] = Double.parseDouble(input[i]);
+			}
+		}),
+		
+		z((String[] input, SensorModel model) -> {
+			model.zSpeed = Double.parseDouble(input[1]);
+		}),
+		
+		focus((String[] input, SensorModel model) -> {
+			for (int i = 1; i < input.length; ++i) {
+				model.focusSensors[i] = Double.parseDouble(input[i]);
+			}
+		});
+		
+		Parser parser;
 
 		Sensor(Parser parser) {
 			this.parser = parser;
