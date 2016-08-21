@@ -48,13 +48,13 @@ public class MessageParser {
 
 		opponents((String[] input, SensorModel model) -> {
 			for (int i = 1; i < input.length; ++i) {
-				model.opponentSensors[i] = Double.parseDouble(input[i]);
+				model.opponentSensors[i-1] = Double.parseDouble(input[i]);
 			}
 		}),
 
 		track((String[] input, SensorModel model) -> {
 			for (int i = 1; i < input.length; ++i) {
-				model.trackEdgeSensors[i] = Double.parseDouble(input[i]);
+				model.trackEdgeSensors[i-1] = Double.parseDouble(input[i]);
 			}
 		}),
 
@@ -112,7 +112,7 @@ public class MessageParser {
 		
 		wheelSpinVel((String[] input, SensorModel model) -> {
 			for (int i = 1; i < input.length; ++i) {
-				model.wheelSpinVelocity[i] = Double.parseDouble(input[i]);
+				model.wheelSpinVelocity[i-1] = Double.parseDouble(input[i]);
 			}
 		}),
 		
@@ -122,7 +122,7 @@ public class MessageParser {
 		
 		focus((String[] input, SensorModel model) -> {
 			for (int i = 1; i < input.length; ++i) {
-				model.focusSensors[i] = Double.parseDouble(input[i]);
+				model.focusSensors[i-1] = Double.parseDouble(input[i]);
 			}
 		});
 		

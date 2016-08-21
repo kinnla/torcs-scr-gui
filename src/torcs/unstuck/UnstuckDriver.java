@@ -58,6 +58,7 @@ public class UnstuckDriver extends Driver {
 
 		// update status and temp values
 		status.updateStatus(this);
+		System.out.println(status);
 		temp.update(m);
 
 		// compute and return action
@@ -165,7 +166,7 @@ public class UnstuckDriver extends Driver {
 			@Override
 			void computeAction(Action a, UnstuckDriver d) {
 				a.gear = d.controlGear();
-				a.steering = OFFTRACK_ANGLE * Math.signum(d.model.trackPosition) + d.model.angleToTrackAxis;
+				a.steering = OFFTRACK_ANGLE * -Math.signum(d.model.trackPosition); // - d.model.angleToTrackAxis;
 				a.accelerate = 0.5;
 				a.brake = 0;
 			}
