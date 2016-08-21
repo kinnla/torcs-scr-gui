@@ -14,9 +14,7 @@ public class MessageParser {
 	}
 	
 	public SensorModel parse(String line) {
-		assert line.trim().equals(line);
-
-		String[] items = line.split("\\)\\(");
+		String[] items = line.trim().split("\\)\\(");
 		assert items.length > 0;
 		
 		// strip brackets from first and last element
@@ -24,9 +22,7 @@ public class MessageParser {
 		items[items.length-1] = items[items.length-1].substring(0, items.length-1);
 		
 		for (String item : items) {
-			assert item.trim().equals(item);
-
-			String[] keyAndValues = item.split(" ");
+			String[] keyAndValues = item.trim().split(" ");
 			assert keyAndValues.length >=2;
 			
 			Sensor sensor = Sensor.valueOf(keyAndValues[0]);

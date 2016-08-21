@@ -8,8 +8,6 @@ import java.io.FileOutputStream;
 import java.io.PrintStream;
 import java.util.StringTokenizer;
 
-import sun.rmi.log.ReliableLog.LogFile;
-
 /**
  * @author Daniele Loiacono
  * 
@@ -52,14 +50,14 @@ public class Client {
 		parseParameters(args);
 
 		// set log file
-		try {
-			String logFile = args[0].substring(args[0].lastIndexOf('.') + 1)
-					+ "_log.txt";
-			System.setOut(new PrintStream(new FileOutputStream(logFile, true)));
-		} catch (FileNotFoundException e) {
-			// TODO Auto-generated catch block
-			e.printStackTrace();
-		}
+//		try {
+//			String logFile = args[0].substring(args[0].lastIndexOf('.') + 1)
+//					+ "_log.txt";
+//			System.setOut(new PrintStream(new FileOutputStream(logFile, true)));
+//		} catch (FileNotFoundException e) {
+//			// TODO Auto-generated catch block
+//			e.printStackTrace();
+//		}
 
 		SocketHandler mySocket = new SocketHandler(host, port, verbose);
 		MessageParser parser = new MessageParser();

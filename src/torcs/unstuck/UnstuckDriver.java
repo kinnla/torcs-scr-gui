@@ -24,7 +24,7 @@ public class UnstuckDriver extends Driver {
 	static final double STUCK_ANGLE = Math.toRadians(30);
 
 	// angle that the car aims to have when driving back to the track
-	static final double OFFTRACK_ANGLE = Math.toRadians(20);
+	static final double OFFTRACK_ANGLE = Math.toRadians(30);
 
 	// threshold for a low speed
 	static final int LOW_SPEED = 5;
@@ -45,7 +45,8 @@ public class UnstuckDriver extends Driver {
 	// ------------------------- Constructor
 	public UnstuckDriver() {
 		System.out.println("This is UnstuckDriver on track " + getTrackName());
-		System.out.println("This is a race " + (damage ? "with" : "without") + " damage.");
+		System.out.println("This is a race " + (damage ? "with" : "without")
+				+ " damage.");
 	}
 
 	// ------------------ public methods
@@ -114,9 +115,11 @@ public class UnstuckDriver extends Driver {
 		// to be called once per tick
 		void update(SensorModel m) {
 			onTrack = Math.abs(m.trackPosition) < 1;
-			sharpAngle = Math.abs(m.angleToTrackAxis) > Math.toRadians(STUCK_ANGLE);
+			sharpAngle = Math.abs(m.angleToTrackAxis) > Math
+					.toRadians(STUCK_ANGLE);
 			lowSpeed = Math.abs(m.speed) + Math.abs(m.lateralSpeed) < LOW_SPEED;
-			towardsTrackCenter = m.angleToTrackAxis > 0 && m.trackPosition < 0;
+			towardsTrackCenter = (m.angleToTrackAxis > 0) == (m.trackPosition > 0);
+			System.out.println("towardsTrackCenter " + towardsTrackCenter);
 		}
 	}
 
@@ -128,8 +131,10 @@ public class UnstuckDriver extends Driver {
 			void updateStatus(UnstuckDriver driver) {
 
 				// check, if stuck and we shall go backwards
-				if (driver.temp.sharpAngle && driver.temp.lowSpeed && !driver.temp.towardsTrackCenter) {
+				if (driver.temp.sharpAngle && driver.temp.lowSpeed
+						&& !driver.temp.towardsTrackCenter) {
 					driver.status = BACK;
+					return;
 				}
 
 				// check if off road
@@ -141,9 +146,9 @@ public class UnstuckDriver extends Driver {
 			@Override
 			void computeAction(Action a, UnstuckDriver d) {
 				a.gear = d.controlGear();
-				a.steering = 0; // TODO
-				a.accelerate = 1; //TODO
-				a.brake = 0; //TODO
+				a.steering = d.model.angleToTrackAxis;
+				a.accelerate = 1; // TODO
+				a.brake = 0; // TODO
 			}
 		},
 
@@ -153,33 +158,42 @@ public class UnstuckDriver extends Driver {
 			void updateStatus(UnstuckDriver driver) {
 
 				// check, if stuck and we shall go backwards
-				if (driver.temp.sharpAngle && driver.temp.lowSpeed && !driver.temp.towardsTrackCenter) {
+				if (driver.temp.sharpAngle && driver.temp.lowSpeed
+						&& !driver.temp.towardsTrackCenter) {
 					driver.status = BACK;
+					return;
 				}
 
 				// check if off road
-				if (!driver.temp.onTrack) {
-					driver.status = OFF_TRACK;
+				if (driver.temp.onTrack) {
+					driver.status = DRIVE;
 				}
 			}
 
 			@Override
 			void computeAction(Action a, UnstuckDriver d) {
 				a.gear = d.controlGear();
-				a.steering = OFFTRACK_ANGLE * -Math.signum(d.model.trackPosition); // - d.model.angleToTrackAxis;
-				a.accelerate = 0.5;
+				a.steering = OFFTRACK_ANGLE
+						* -Math.signum(d.model.trackPosition)
+						+ d.model.angleToTrackAxis;
+				if (a.steering > 0.3) {
+					a.steering = 0.3;
+				} else if (a.steering < -0.3) {
+					a.steering = -0.3;
+				}
+				a.accelerate = 0.6;
 				a.brake = 0;
 			}
 		},
 
-		// heading backwars in order to unstuck
+		// heading backwards in order to unstuck
 		BACK {
 			@Override
-			void updateStatus(UnstuckDriver driver) {
+			void updateStatus(UnstuckDriver d) {
 
 				// check if direction is ok again
-				if (driver.temp.towardsTrackCenter) {
-					driver.status = HALT;
+				if (d.temp.towardsTrackCenter && Math.abs(d.model.angleToTrackAxis) < STUCK_ANGLE) {
+					d.status = HALT;
 				}
 			}
 
@@ -187,6 +201,12 @@ public class UnstuckDriver extends Driver {
 			void computeAction(Action a, UnstuckDriver d) {
 				a.gear = -1;
 				a.steering = Math.signum(d.model.trackPosition);
+				if (!d.temp.onTrack && a.steering > 0.3) {
+					a.steering = 0.3;
+				} else if (!d.temp.onTrack && a.steering < -0.3) {
+					a.steering = -0.3;
+				}
+
 				a.accelerate = 0.5;
 				a.brake = 0;
 			}
@@ -212,7 +232,7 @@ public class UnstuckDriver extends Driver {
 			}
 		};
 
-		// updates the current status 
+		// updates the current status
 		abstract void updateStatus(UnstuckDriver driver);
 
 		// computes the action
